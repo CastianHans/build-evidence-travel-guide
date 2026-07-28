@@ -1,19 +1,19 @@
-# Travel Guide Outline
+# 中文旅行手册目录
 
-1. Trip-period weather forecast and verification timestamp
-2. Pre-departure preparation
-3. Confirmed bookings, hotel, travelers, and hard boundaries
-4. Payment strategy and transit-pass decision
-5. Airport arrival transfer
-6. Complete trip calendar
-7. Detailed day sections
-   - day verdict
-   - full route chain
-   - stop execution cards
-   - feasibility review
-8. Complete weather/ticket fallback plans
-9. Departure and airport procedure
-10. Food strategy and price protection
-11. Shopping and product audit
-12. Emergencies and local-language cards
-13. Evidence coverage, limitations, and sources
+1. 旅行期间天气预报及核验时间
+2. 出发前准备
+3. 已确认预订、酒店、同行人员和硬性边界
+4. 支付策略与交通卡决策
+5. 抵达机场后的完整操作
+6. 全程日历
+7. 每日详细计划
+   - 当日结论
+   - 完整路线链
+   - 逐站执行卡
+   - 时间与体力可行性复盘
+8. 天气、票务和突发情况的完整备选
+9. 离境及前往机场流程
+10. 餐饮策略与防坑价格
+11. 购物、护肤品和数码产品审计
+12. 紧急处理及当地语言卡片
+13. 证据覆盖、局限与来源

@@ -85,6 +85,7 @@ Explain:
 - fallback and cash requirement.
 
 Separate airport arrival and departure instructions.
+For Chinese travelers, list Alipay, WeChat Pay, UnionPay, Visa, and Mastercard support separately. Do not convert a generic “cards accepted” statement into proof that UnionPay works, and do not convert a QR sign into proof that a mainland wallet can complete payment. Show local-currency settlement, CNY estimate, foreign-transaction fees, dynamic-currency-conversion risk, and a failure fallback when material.
 
 ## 5. Shopping and products
 
@@ -92,6 +93,7 @@ For each product:
 
 - exact model, size, formulation, or regional SKU;
 - current local price and comparison price;
+- dated CNY conversion and a comparable mainland China channel price;
 - tax/refund effect;
 - benefit claim with appropriate uncertainty;
 - direct adverse/negative evidence;
@@ -103,6 +105,7 @@ Do not label products effective merely because they are popular.
 
 ## 6. Visual design
 
+- Default to Simplified Chinese headings, body text, labels, and user instructions. Retain exact foreign proper nouns and add local-language names where they help navigation.
 - Put weather first and preparation second when requested.
 - Use a consistent grid, restrained color palette, readable CJK fonts, page numbers, and clear hierarchy.
 - Use route strips, small maps, station-exit diagrams, and recognition photos only when useful.

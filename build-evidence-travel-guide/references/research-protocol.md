@@ -15,11 +15,12 @@
 Use four distinct layers:
 
 1. **Primary official:** transport operators, tourism authorities, museums, ticket offices, meteorological agencies, immigration/customs, manufacturers.
-2. **Chinese traveler experience:** Xiaohongshu first when relevant, plus Bilibili, blogs, forums, and map reviews.
+2. **Chinese traveler experience:** Xiaohongshu first when relevant, plus Bilibili, Chinese travel communities, blogs, forums, and map reviews. Search both normal traveler wording and explicit 种草/避雷 wording.
 3. **International traveler experience:** Reddit and other accessible travel communities.
 4. **Local-language evidence:** local blogs, map reviews, forums, news, and institutions using native names.
 
 Record each layer separately. High post count on one platform does not replace missing layers.
+For a Chinese-market deliverable, explain cross-layer conflicts in Simplified Chinese and state whether a problem is especially relevant to mainland Chinese travelers.
 
 ## 2. Query design
 
@@ -40,6 +41,9 @@ Create a query matrix for each candidate.
 - native name + 별로/비추천/대기/혼잡/바가지/휴무
 - transport product + failed/card rejected/cash only/wrong station
 - product + irritation/adverse/warranty/region lock
+- exact name + 支付宝/微信支付/银联/境外卡失败/现金
+- exact product + 国内价格/免税价格/退税/中国保修/国行区别
+- destination + 中国护照/中国游客 + current operational issue
 
 ### Connection
 

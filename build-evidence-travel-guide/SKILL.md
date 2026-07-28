@@ -1,11 +1,20 @@
 ---
 name: build-evidence-travel-guide
-description: Build, audit, revise, and package evidence-backed travel plans and self-contained PDF trip manuals using official sources plus positive and negative experiences from Xiaohongshu, Reddit, local-language platforms, blogs, maps, and review sites. Use when a user asks for a detailed itinerary, family trip plan, social-platform travel research, 种草/避雷 validation, route feasibility, transportation or pass analysis, shopping recommendations, or a polished travel-guide PDF, including when the required research software is not installed yet.
+description: 面向中国用户构建、审计、修订并打包循证旅行计划和自包含 PDF 手册；综合官方来源、小红书正向种草与反向避雷、Reddit、目的地本地语言平台、博客、地图和评价网站。用户需要详细行程、家庭旅行、社交平台调研、逐景点避雷、路线可行性、交通卡与机场交通、支付宝/微信/银联等支付分析、境内外商品比价或精美旅行 PDF 时使用；缺少调研软件时也适用。
 ---
 
-# Build an Evidence-Backed Travel Guide
+# 构建面向中国用户的循证旅行手册
 
-Treat the deliverable as an executable field manual, not a list of attractions.
+把交付物当作可直接照着执行的现场手册，而不是景点清单。
+
+## 中国市场默认设置
+
+- 除非用户另有要求，否则使用简体中文沟通和交付。
+- 把小红书作为中国游客体验的核心层，同时把官方、国外社区和目的地本地平台证据分层保留。
+- 涉及价格决策时，同时给出当地货币、带汇率时间戳的人民币估算和中国常见渠道对比价。
+- 按需要分别核验支付宝、微信支付、银联、Visa、Mastercard、境外交易费、动态货币转换、仅收现金例外和支付失败备选。
+- 涉及执行时，检查中国护照、从中国大陆出发、漫游/实体 SIM/eSIM、插头、退税、海关、保修、地区型号、App/语言和售后限制。
+- 国外平台名、官方产品名、车站名、型号和有用的当地语言检索词保持原文，避免因翻译损失操作精度。
 
 ## Non-negotiable rules
 
@@ -139,6 +148,8 @@ For every pass or payment recommendation:
 - verify whether each traveler needs a separate card;
 - separate airport purchase, city purchase, and return-to-airport procedures;
 - research failure cases: foreign-card rejection, cash-only machines, wrong product, missed tap, late activation, unavailable stock, incompatible route, and refund difficulty;
+- distinguish Alipay/WeChat acceptance from merchant-presented QR compatibility, and UnionPay acceptance from generic “card accepted” claims;
+- warn against dynamic currency conversion and state whether local-currency settlement is normally preferable;
 - give an exact fallback and state the cash impact.
 
 Never recommend a pass merely because its validity length matches the trip length.
@@ -148,6 +159,7 @@ Never recommend a pass merely because its validity length matches the trip lengt
 - Prefer a decision rule over a fragile “must visit” named venue.
 - Set queue limits, price transparency rules, ordering checks, and alternatives in the same area.
 - For products, compare exact model/size and same-day net price, not list price.
+- Compare the destination net price with a dated mainland China reference price and show both in CNY when practical.
 - Include adverse reactions, unsuitable users, regional model differences, warranty, voltage/frequency, language, customs, and luggage constraints.
 - Treat promotions as expiring observations, never guaranteed prices.
 

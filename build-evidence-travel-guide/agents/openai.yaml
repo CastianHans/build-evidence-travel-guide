@@ -1,4 +1,4 @@
 interface:
   display_name: "循证旅行计划与PDF"
-  short_description: "Official and social evidence into executable travel PDFs"
-  default_prompt: "Use $build-evidence-travel-guide to research my trip from scratch and produce a source-bounded, executable travel guide PDF."
+  short_description: "为中国用户制作可执行、可追溯的出境旅行PDF"
+  default_prompt: "使用 $build-evidence-travel-guide 从零调研我的旅行，默认用简体中文，综合小红书正反向体验、国外与当地平台和官方信息，制作可直接执行且来源可追溯的旅行计划 PDF。"
