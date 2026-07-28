@@ -8,7 +8,8 @@
 4. Transport and payment chapters
 5. Shopping and products
 6. Visual design
-7. Final quality assurance
+7. Reputation and evidence disclosure
+8. Final quality assurance
 
 ## 1. Day construction
 
@@ -113,7 +114,22 @@ Do not label products effective merely because they are popular.
 - Avoid decorative screenshots, dense collages, tiny text, or random social-post images.
 - Credit external images and respect licensing; prefer official or self-generated diagrams.
 
-## 7. Final quality assurance
+## 7. Reputation and evidence disclosure
+
+For every named restaurant, store, controversial attraction, or candidate exposed
+to paid promotion/black-post risk, show:
+
+- independent positive and negative narrative clusters, not raw post counts;
+- source families and time windows;
+- commercial-promotion and coordinated-attack signals separately;
+- material comment corroboration, refutations, merchant response, and sampling
+  limits;
+- any D1/D2/D3 nationality-treatment signal scoped to branch and date;
+- why the item is included, downgraded, replaced, or avoided.
+
+Do not say “大多数游客” or “普遍歧视” from an online sample.
+
+## 8. Final quality assurance
 
 Content checks:
 
@@ -131,3 +147,9 @@ PDF checks:
 - inspect cover, weather, preparation, each day opener, dense execution cards, alternatives, sources, and last page at full resolution;
 - text extraction contains required sections;
 - record page count, bytes, and SHA-256.
+- print the current candidate-row and evidence-ledger-row counts in the PDF;
+- keep filename, cover/body version, footer, and metadata consistent;
+- compare rendered page count with PDF page count and complete the visual
+  inspection manifest;
+- run `scripts/finalize_run.py`; only its `FINAL` result permits a final-delivery
+  claim.

@@ -9,12 +9,15 @@
 - 默认使用简体中文沟通和交付。
 - 小红书是中国游客体验的核心来源，同时参考 Reddit、目的地本地平台、地图评价和攻略网站。
 - 每个重要景点、餐厅、交通方案和商品都分别检索正向体验与避雷信息。
-- 拦截重复链接、错对象帖子、标题党、疑似推广、缺少正文摘录和证据平台过于单一的问题。
+- 按独立叙事簇而非帖子数计数，拦截重复/搬运、错对象、标题党、摘要冒充正文和来源家族过于单一。
+- 分开评估商业推广、协同黑帖、评论附和/反驳，不让点赞量或简单“同意”直接控制结论。
+- 对疑似歧视采用 D0-D3 证据分级；只有当前原始证据或跨平台、跨时间的独立 D2 事件收敛才触发保守避开。
 - 价格默认同时记录目的地当地价格、折合人民币价格和中国常见渠道对比价。
 - 支付章节默认检查支付宝、微信支付、银联、Visa、Mastercard、现金需求、境外手续费和支付失败备选。
 - 从确切酒店地址构建每天的完整路线，不会只给出“上午去 A、下午去 B”。
 - 单独核算交通卡、机场交通、打车、退税、行李、境外上网和购物保修。
-- 最终 PDF 会先做文本检查，再逐页渲染检查排版。
+- 最终 PDF 会经过需求追踪、证据、信誉、逐日时间算术、文本版本和逐页视觉清单六重门禁。
+- 中间稿只能标为 provisional；自动最终化清单未全绿时不能声称“全部完成”。
 
 ## 安装
 
@@ -69,15 +72,26 @@ python build-evidence-travel-guide/scripts/doctor.py
 python build-evidence-travel-guide/scripts/init_project.py path/to/project
 ```
 
+对 v1.1 项目重跑同一命令会保留数据并追加 v1.2 字段；新增的访问级别、
+来源家族、独立簇和信誉字段必须由研究者复核填写，工具不会把旧摘要自动猜成
+“已打开全文”。
+
 填写：
 
+- `requirements/traceability.csv`
 - `research/candidates.csv`
 - `research/evidence.csv`
+- `research/comments.csv`
+- `research/comment-limitations.md`
+- `work/itinerary.csv`
 
 执行审计：
 
 ```text
 python build-evidence-travel-guide/scripts/audit_evidence.py path/to/project
+python build-evidence-travel-guide/scripts/audit_reputation.py path/to/project
+python build-evidence-travel-guide/scripts/audit_itinerary.py path/to/project
+python build-evidence-travel-guide/scripts/audit_traceability.py path/to/project
 ```
 
 返回码：
@@ -86,7 +100,8 @@ python build-evidence-travel-guide/scripts/audit_evidence.py path/to/project
 - `2`：仍有关键或重要候选项证据不足；
 - `3`：数据结构或证据完整性错误。
 
-只有唯一、直接相关、非推广且完成对象身份核验的证据才能计数。
+只有直接相关、身份核验、打开全文、通过推广/攻击风险检查的独立内容簇才能计数。
+搜索摘要、标题、相同事件的重复帖子和纯附和评论都不能冒充独立经历。
 
 ## PDF 检查
 
@@ -98,7 +113,22 @@ python build-evidence-travel-guide/scripts/render_pdf.py \
   guide.pdf path/to/empty-render-directory
 ```
 
-文本检查不能替代视觉检查。需要查看联系表，并抽查完整分辨率页面。
+渲染命令会创建逐页 `visual-inspection.csv`。文本检查不能替代视觉检查；
+必须查看联系表与每一张完整页面，修复后重新渲染，并逐页填写检查人、时间和
+`pass`。
+
+最终化：
+
+```text
+python build-evidence-travel-guide/scripts/finalize_run.py \
+  path/to/project path/to/guide_v3.0.pdf \
+  --document-version v3.0 \
+  --visual-manifest path/to/visual-inspection.csv \
+  --require "出发前准备"
+```
+
+只有命令返回 `FINAL` 才能把 PDF 标为最终版；否则使用 `--mode provisional`
+保留并披露缺口。
 
 ## 自动化测试
 
@@ -107,7 +137,8 @@ python -m unittest discover \
   -s build-evidence-travel-guide/tests -v
 ```
 
-测试覆盖正常多平台证据、重复 URL、重复证据编号、孤立证据、候选对象错配、推广内容、身份核验和降低证据门槛时的书面理由。
+测试覆盖全文门禁、独立簇与来源家族、拒绝候选、商业/攻击风险、评论权重、
+D2/D3 规则、逐日路线算术、需求追踪、PDF 版本/远期天气和最终状态机。
 
 ## 许可证
 

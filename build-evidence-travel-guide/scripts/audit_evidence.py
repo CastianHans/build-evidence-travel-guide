@@ -1,23 +1,31 @@
 #!/usr/bin/env python3
-"""Strictly audit unique candidate-level travel evidence."""
+"""Audit candidate-level travel evidence using full-read, cluster-aware gates."""
 
 from __future__ import annotations
 
 import argparse
 import csv
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 
 DEFAULTS = {
     "critical": (2, 2, 1, 1, 2),
-    "major": (2, 2, 1, 0, 1),
+    "major": (2, 2, 1, 0, 2),
     "minor": (1, 1, 0, 0, 1),
 }
 IMPORTANCE = set(DEFAULTS)
 STATUS = {"candidate", "included", "optional", "rejected"}
+SOURCE_FAMILY = {
+    "china_social",
+    "international_social",
+    "local_social",
+    "map_review",
+    "official",
+    "independent_blog_news",
+}
 SOURCE_TYPE = {
     "social",
     "official",
@@ -28,15 +36,27 @@ SOURCE_TYPE = {
 }
 POLARITY = {"positive", "negative", "mixed", "neutral", "official"}
 RELEVANCE = {"direct", "partial", "mismatch"}
+ACCESS_LEVEL = {
+    "full_post_opened",
+    "full_indexed_text",
+    "comment_opened",
+    "search_snippet",
+    "title_only",
+}
+DIRECT_ACCESS = {"full_post_opened", "full_indexed_text"}
 EXPERIENCE_TYPE = {
     "first_hand",
-    "comment",
-    "indexed_excerpt",
     "official",
     "second_hand",
 }
 PROMOTION = {"no", "possible", "yes"}
+SIGNAL = {"none", "low", "medium", "high"}
 IDENTITY_CHECK = {"yes", "no", "unknown"}
+INCIDENT_SPECIFICITY = {"none", "vague", "specific", "concrete"}
+ARTIFACT_SUPPORT = {"none", "context", "receipt_media", "primary_record"}
+DISCRIMINATION_CLASS = {"d0", "d1", "d2", "d3", "not_applicable"}
+YES_NO = {"yes", "no"}
+FRESHNESS = {"current", "stale", "not_applicable"}
 TRACKING_KEYS = {
     "xsec_token",
     "xsec_source",
@@ -64,9 +84,10 @@ def integer(value: str, fallback: int) -> int:
     return result
 
 
-def load_csv(path: Path) -> list[dict[str, str]]:
+def load_csv(path: Path) -> tuple[list[str], list[dict[str, str]]]:
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
-        return list(csv.DictReader(handle))
+        reader = csv.DictReader(handle)
+        return list(reader.fieldnames or []), list(reader)
 
 
 def canonical_url(value: str) -> str:
@@ -110,11 +131,17 @@ def enum(value: str, allowed: set[str], field: str) -> str:
     return result
 
 
+def required_columns(actual: list[str], expected: set[str], label: str) -> list[str]:
+    missing = sorted(expected - set(actual))
+    return [f"{label}: missing v1.2 column {item}" for item in missing]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("project_dir", type=Path)
     parser.add_argument("--gate", default="critical,major")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--official-max-age-days", type=int, default=45)
     args = parser.parse_args()
 
     root = args.project_dir.expanduser().resolve()
@@ -123,9 +150,53 @@ def main() -> int:
     if not candidate_path.exists() or not evidence_path.exists():
         raise SystemExit("Missing research/candidates.csv or research/evidence.csv")
 
-    candidates = load_csv(candidate_path)
-    evidence = load_csv(evidence_path)
-    errors: list[str] = []
+    candidate_fields, candidates = load_csv(candidate_path)
+    evidence_fields, evidence = load_csv(evidence_path)
+    errors = required_columns(
+        candidate_fields,
+        {
+            "candidate_id",
+            "name",
+            "importance",
+            "status",
+            "source_family_target",
+            "reputation_required",
+            "rejection_reason",
+            "replacement_candidate_id",
+        },
+        "candidates.csv",
+    )
+    errors.extend(
+        required_columns(
+            evidence_fields,
+            {
+                "evidence_id",
+                "candidate_id",
+                "source_family",
+                "source_type",
+                "polarity",
+                "relevance",
+                "access_level",
+                "experience_type",
+                "promotion",
+                "commercial_signal",
+                "attack_signal",
+                "identity_check",
+                "independence_cluster_id",
+                "incident_specificity",
+                "artifact_support",
+                "discrimination_class",
+                "matched_comparison",
+                "freshness_status",
+                "retrieved_at",
+                "title",
+                "claim",
+                "url",
+                "reviewer",
+            },
+            "evidence.csv",
+        )
+    )
     candidate_map: dict[str, dict[str, str]] = {}
 
     for row_number, candidate in enumerate(candidates, start=2):
@@ -139,14 +210,16 @@ def main() -> int:
             continue
         try:
             enum(candidate.get("importance", "major"), IMPORTANCE, "importance")
-            enum(candidate.get("status", "candidate"), STATUS, "status")
+            status = enum(candidate.get("status", "candidate"), STATUS, "status")
+            enum(candidate.get("reputation_required", "no"), YES_NO, "reputation_required")
+            if status == "rejected" and not (candidate.get("rejection_reason") or "").strip():
+                raise ValueError("rejected candidate requires rejection_reason")
         except ValueError as error:
             errors.append(f"candidates.csv:{row_number}: {error}")
         candidate_map[candidate_id] = candidate
 
     evidence_ids: set[str] = set()
     unique_urls: set[tuple[str, str]] = set()
-    fingerprints: set[tuple[str, str]] = set()
     valid_evidence: list[dict[str, str]] = []
 
     for row_number, item in enumerate(evidence, start=2):
@@ -164,12 +237,31 @@ def main() -> int:
             errors.append(f"{prefix}: unknown candidate_id {candidate_id}")
             continue
         try:
+            source_family = enum(item.get("source_family"), SOURCE_FAMILY, "source_family")
             source_type = enum(item.get("source_type"), SOURCE_TYPE, "source_type")
             polarity = enum(item.get("polarity"), POLARITY, "polarity")
             relevance = enum(item.get("relevance"), RELEVANCE, "relevance")
-            enum(item.get("experience_type"), EXPERIENCE_TYPE, "experience_type")
+            access_level = enum(item.get("access_level"), ACCESS_LEVEL, "access_level")
+            experience_type = enum(
+                item.get("experience_type"), EXPERIENCE_TYPE, "experience_type"
+            )
             promotion = enum(item.get("promotion"), PROMOTION, "promotion")
+            commercial_signal = enum(
+                item.get("commercial_signal"), SIGNAL, "commercial_signal"
+            )
+            attack_signal = enum(item.get("attack_signal"), SIGNAL, "attack_signal")
             identity = enum(item.get("identity_check"), IDENTITY_CHECK, "identity_check")
+            incident = enum(
+                item.get("incident_specificity"), INCIDENT_SPECIFICITY, "incident_specificity"
+            )
+            artifact = enum(item.get("artifact_support"), ARTIFACT_SUPPORT, "artifact_support")
+            discrimination = enum(
+                item.get("discrimination_class"),
+                DISCRIMINATION_CLASS,
+                "discrimination_class",
+            )
+            matched = enum(item.get("matched_comparison"), YES_NO, "matched_comparison")
+            freshness = enum(item.get("freshness_status"), FRESHNESS, "freshness_status")
             valid_date(item.get("retrieved_at"), "retrieved_at")
             valid_date(item.get("published_at"), "published_at", allow_blank=True)
             url = canonical_url(item.get("url") or "")
@@ -180,6 +272,10 @@ def main() -> int:
             if not (item.get("claim") or "").strip():
                 raise ValueError("claim is required")
             if relevance == "direct":
+                if access_level not in DIRECT_ACCESS:
+                    raise ValueError(
+                        "direct evidence requires full_post_opened or full_indexed_text"
+                    )
                 if identity != "yes":
                     raise ValueError("direct evidence requires identity_check=yes")
                 if source_type != "official" and not (item.get("excerpt") or "").strip():
@@ -188,8 +284,75 @@ def main() -> int:
                     raise ValueError("direct evidence requires reviewer")
             if polarity == "official" and source_type != "official":
                 raise ValueError("polarity=official requires source_type=official")
-            if source_type == "official" and polarity != "official":
-                raise ValueError("source_type=official requires polarity=official")
+            if source_type == "official":
+                if polarity != "official" or source_family != "official":
+                    raise ValueError(
+                        "official source requires polarity=official and source_family=official"
+                    )
+                if experience_type != "official":
+                    raise ValueError("official source requires experience_type=official")
+                if relevance == "direct" and freshness != "current":
+                    raise ValueError("direct official evidence requires freshness_status=current")
+                retrieved = date.fromisoformat((item.get("retrieved_at") or "").strip())
+                if (
+                    relevance == "direct"
+                    and retrieved < date.today() - timedelta(days=args.official_max_age_days)
+                ):
+                    raise ValueError(
+                        "direct official evidence is stale; retrieve it again or adjust "
+                        "--official-max-age-days with a documented reason"
+                    )
+            elif source_family == "official":
+                raise ValueError("source_family=official requires source_type=official")
+            if source_type == "social" and source_family not in {
+                "china_social",
+                "international_social",
+                "local_social",
+            }:
+                raise ValueError("source_type=social requires a social source_family")
+            if source_type == "map_review" and source_family != "map_review":
+                raise ValueError("source_type=map_review requires source_family=map_review")
+            if source_type in {"blog", "news"} and source_family != "independent_blog_news":
+                raise ValueError(
+                    "blog/news requires source_family=independent_blog_news"
+                )
+            if source_type == "operational_failure" and polarity != "negative":
+                raise ValueError("operational_failure requires polarity=negative")
+            if relevance == "direct" and source_type != "official":
+                if not (item.get("independence_cluster_id") or "").strip():
+                    raise ValueError(
+                        "direct experiential evidence requires independence_cluster_id"
+                    )
+            if discrimination in {"d2", "d3"}:
+                if incident not in {"specific", "concrete"}:
+                    raise ValueError("D2/D3 evidence requires specific or concrete incident")
+                if discrimination == "d2" and matched != "yes":
+                    raise ValueError("D2 evidence requires matched_comparison=yes")
+                if discrimination == "d3" and artifact != "primary_record":
+                    raise ValueError("D3 evidence requires artifact_support=primary_record")
+                if discrimination == "d2" and polarity != "negative":
+                    raise ValueError("D2 evidence requires polarity=negative")
+                if discrimination == "d3" and polarity not in {"negative", "official"}:
+                    raise ValueError("D3 evidence requires polarity=negative or official")
+                if not (item.get("published_at") or "").strip():
+                    raise ValueError("D2/D3 evidence requires published_at")
+                if not (item.get("target_group") or "").strip():
+                    raise ValueError("D2/D3 evidence requires target_group")
+            candidate_branch = (
+                candidate_map[candidate_id].get("branch_or_variant") or ""
+            ).strip()
+            evidence_branch = (item.get("branch_or_variant") or "").strip()
+            if relevance == "direct" and candidate_branch:
+                if not evidence_branch:
+                    raise ValueError(
+                        "direct evidence requires branch_or_variant for this candidate"
+                    )
+                if normalized(evidence_branch) != normalized(candidate_branch):
+                    raise ValueError(
+                        "direct evidence branch_or_variant does not match candidate"
+                    )
+            if promotion == "yes" and commercial_signal == "none":
+                raise ValueError("promotion=yes requires a commercial_signal")
         except (ValueError, TypeError) as error:
             errors.append(f"{prefix}: {error}")
             continue
@@ -199,20 +362,15 @@ def main() -> int:
             errors.append(f"{prefix}: duplicate canonical URL for {candidate_id}: {url}")
             continue
         unique_urls.add(url_key)
-        fingerprint = (item.get("content_fingerprint") or "").strip().lower()
-        if fingerprint:
-            fingerprint_key = (candidate_id, fingerprint)
-            if fingerprint_key in fingerprints:
-                errors.append(
-                    f"{prefix}: duplicate content_fingerprint for {candidate_id}: {fingerprint}"
-                )
-                continue
-            fingerprints.add(fingerprint_key)
 
+        item["_source_family"] = source_family
         item["_source_type"] = source_type
         item["_polarity"] = polarity
         item["_relevance"] = relevance
+        item["_access_level"] = access_level
         item["_promotion"] = promotion
+        item["_commercial_signal"] = commercial_signal
+        item["_attack_signal"] = attack_signal
         item["_canonical_url"] = url
         valid_evidence.append(item)
 
@@ -223,7 +381,9 @@ def main() -> int:
     lines = [
         "# Evidence coverage audit",
         "",
-        "| Candidate | Importance | Positive | Negative | Official | Operational | Platforms | Result |",
+        "Counts are independent content clusters, not raw posts.",
+        "",
+        "| Candidate | Importance | Positive | Negative | Official | Operational | Source families | Result |",
         "|---|---|---:|---:|---:|---:|---:|---|",
     ]
     failures: list[tuple[str, str, list[str]]] = []
@@ -231,7 +391,21 @@ def main() -> int:
 
     for candidate_id, candidate in candidate_map.items():
         status = normalized(candidate.get("status", "candidate"))
+        rows = by_candidate.get(candidate_id, [])
         if status == "rejected":
+            reason = (candidate.get("rejection_reason") or "").strip()
+            replacement = (candidate.get("replacement_candidate_id") or "").strip()
+            has_direct_basis = any(row["_relevance"] == "direct" for row in rows)
+            preference_basis = reason.startswith("USER_PREFERENCE:")
+            if replacement and replacement not in candidate_map:
+                errors.append(
+                    f"candidate {candidate_id}: unknown replacement_candidate_id {replacement}"
+                )
+            if not has_direct_basis and not preference_basis:
+                errors.append(
+                    f"candidate {candidate_id}: rejected status requires direct evidence "
+                    "or USER_PREFERENCE: in rejection_reason"
+                )
             continue
         audited += 1
         importance = normalized(candidate.get("importance", "major"))
@@ -242,7 +416,7 @@ def main() -> int:
                 "negative_target",
                 "official_target",
                 "operational_target",
-                "platform_target",
+                "source_family_target",
             )
             targets = tuple(
                 integer(candidate.get(field, ""), defaults[index])
@@ -261,22 +435,51 @@ def main() -> int:
             errors.append(f"candidate {candidate_id}: {error}")
             targets = defaults
 
-        direct = [
+        eligible = [
             row
-            for row in by_candidate.get(candidate_id, [])
-            if row["_relevance"] == "direct" and row["_promotion"] == "no"
+            for row in rows
+            if row["_relevance"] == "direct"
+            and row["_access_level"] in DIRECT_ACCESS
+            and row["_promotion"] == "no"
         ]
-        positive = sum(row["_polarity"] == "positive" for row in direct)
-        negative = sum(row["_polarity"] == "negative" for row in direct)
-        official = sum(row["_source_type"] == "official" for row in direct)
-        operational = sum(row["_source_type"] == "operational_failure" for row in direct)
-        experiential_platforms = {
-            (row.get("platform") or "").strip().lower()
-            for row in direct
-            if row["_polarity"] in {"positive", "negative"}
+        positive_clusters = {
+            row.get("independence_cluster_id", "")
+            for row in eligible
+            if row["_polarity"] == "positive"
+            and row["_commercial_signal"] not in {"medium", "high"}
         }
-        actual = (positive, negative, official, operational, len(experiential_platforms))
-        labels = ("positive", "negative", "official", "operational", "platforms")
+        negative_clusters = {
+            row.get("independence_cluster_id", "")
+            for row in eligible
+            if row["_polarity"] == "negative"
+            and row["_attack_signal"] not in {"medium", "high"}
+        }
+        official_urls = {
+            row["_canonical_url"]
+            for row in eligible
+            if row["_source_type"] == "official"
+            and normalized(row.get("freshness_status")) == "current"
+        }
+        operational_clusters = {
+            row.get("independence_cluster_id", "")
+            for row in eligible
+            if row["_source_type"] == "operational_failure"
+            and row["_attack_signal"] not in {"medium", "high"}
+        }
+        experiential_families = {
+            row["_source_family"]
+            for row in eligible
+            if row["_polarity"] in {"positive", "negative"}
+            and row["_source_family"] != "official"
+        }
+        actual = (
+            len(positive_clusters),
+            len(negative_clusters),
+            len(official_urls),
+            len(operational_clusters),
+            len(experiential_families),
+        )
+        labels = ("positive", "negative", "official", "operational", "source_families")
         missing = [
             f"{labels[index]} {actual[index]}/{targets[index]}"
             for index in range(5)
@@ -288,20 +491,23 @@ def main() -> int:
 
         name = md_cell(candidate.get("name") or candidate_id)
         lines.append(
-            f"| {name} | {importance} | {positive}/{targets[0]} | "
-            f"{negative}/{targets[1]} | {official}/{targets[2]} | "
-            f"{operational}/{targets[3]} | {len(experiential_platforms)}/{targets[4]} | "
-            f"{result} |"
+            f"| {name} | {importance} | {actual[0]}/{targets[0]} | "
+            f"{actual[1]}/{targets[1]} | {actual[2]}/{targets[2]} | "
+            f"{actual[3]}/{targets[3]} | {actual[4]}/{targets[4]} | {result} |"
         )
 
     mismatch_count = sum(item["_relevance"] == "mismatch" for item in valid_evidence)
     partial_count = sum(item["_relevance"] == "partial" for item in valid_evidence)
+    snippet_count = sum(
+        item["_access_level"] in {"search_snippet", "title_only"} for item in valid_evidence
+    )
     lines.extend(
         [
             "",
             f"- Audited candidates: {audited}",
             f"- Evidence rows: {len(evidence)}",
-            f"- Valid unique evidence rows: {len(valid_evidence)}",
+            f"- Structurally valid unique rows: {len(valid_evidence)}",
+            f"- Search-snippet/title-only rows excluded: {snippet_count}",
             f"- Explicit mismatches excluded: {mismatch_count}",
             f"- Partial records excluded from direct counts: {partial_count}",
             f"- Uncovered candidates: {len(failures)}",

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import re
 import shutil
 import subprocess
@@ -56,6 +57,8 @@ def main() -> int:
     parser.add_argument("render_dir", type=Path)
     parser.add_argument("--dpi", type=int, default=120)
     parser.add_argument("--pdftoppm")
+    parser.add_argument("--expected-pages", type=int)
+    parser.add_argument("--inspection-manifest", type=Path)
     args = parser.parse_args()
 
     pdf = args.pdf.expanduser().resolve()
@@ -73,11 +76,48 @@ def main() -> int:
     pages = sorted(render_dir.glob("page-*.png"), key=page_number)
     if not pages:
         raise SystemExit("Poppler returned no rendered pages.")
+    if args.expected_pages is not None and len(pages) != args.expected_pages:
+        raise SystemExit(
+            f"Rendered page count mismatch: expected {args.expected_pages}, got {len(pages)}"
+        )
     contact = render_dir / "contact-sheet.jpg"
     made = make_contact_sheet(pages, contact)
+    manifest = (
+        args.inspection_manifest.expanduser().resolve()
+        if args.inspection_manifest
+        else render_dir / "visual-inspection.csv"
+    )
+    if manifest.exists():
+        raise SystemExit(f"Inspection manifest already exists: {manifest}")
+    with manifest.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=[
+                "page",
+                "image",
+                "status",
+                "inspector",
+                "inspected_at",
+                "notes",
+            ],
+        )
+        writer.writeheader()
+        for index, page in enumerate(pages, start=1):
+            writer.writerow(
+                {
+                    "page": index,
+                    "image": str(page),
+                    "status": "pending",
+                    "inspector": "",
+                    "inspected_at": "",
+                    "notes": "",
+                }
+            )
     print(f"pages={len(pages)}")
     if made:
         print(f"contact_sheet={contact}")
+    print(f"inspection_manifest={manifest}")
+    print("visual_status=pending (inspect every page and change each status to pass)")
     return 0
 
 

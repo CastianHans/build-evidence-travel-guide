@@ -6,9 +6,10 @@
 2. Query design
 3. Full-post review
 4. Relevance and polarity
-5. Candidate evidence gate
-6. Conflict handling
-7. Research stopping rule
+5. Independence and source families
+6. Candidate evidence gate
+7. Conflict handling
+8. Research stopping rule
 
 ## 1. Research layers
 
@@ -21,6 +22,9 @@ Use four distinct layers:
 
 Record each layer separately. High post count on one platform does not replace missing layers.
 For a Chinese-market deliverable, explain cross-layer conflicts in Simplified Chinese and state whether a problem is especially relevant to mainland Chinese travelers.
+Retrieve unstable direct official evidence within 45 days of the audit by default.
+For a demonstrably stable rule, document the reason and pass a deliberate
+`--official-max-age-days` override instead of self-labeling an old page current.
 
 ## 2. Query design
 
@@ -64,6 +68,8 @@ For every counted source:
 5. Extract the supported claim and any counterevidence.
 6. Read comments for high-impact disputes, operational failures, and current corrections.
 7. Mark promotion, copied compilations, or incentive-for-review schemes.
+8. Record whether the source was actually opened: `full_post_opened`,
+   `full_indexed_text`, `search_snippet`, or `title_only`.
 
 Do not count:
 
@@ -80,15 +86,41 @@ Each evidence record needs:
 
 - `relevance`: `direct`, `partial`, `mismatch`;
 - `polarity`: `positive`, `negative`, `mixed`, `neutral`, `official`;
-- `experience_type`: `first_hand`, `comment`, `indexed_excerpt`, `official`;
+- `experience_type`: `first_hand`, `second_hand`, `official`;
+- `source_family`: `china_social`, `international_social`, `local_social`,
+  `map_review`, `official`, or `independent_blog_news`;
+- `access_level`;
+- `independence_cluster_id`;
 - `promotion`: `no`, `possible`, `yes`;
+- separate `commercial_signal` and `attack_signal`;
+- `incident_specificity`, `artifact_support`, and any scoped branch/variant;
 - `claim`;
 - `decision_effect`;
 - `url` and retrieval date.
 
-Only `direct` records satisfy candidate-level positive or negative counts.
+Only direct, identity-checked, full-read records satisfy candidate-level positive
+or negative coverage. Count independent content clusters, not raw posts.
 
-## 5. Candidate evidence gate
+## 5. Independence and source families
+
+Put near-identical text, images, talking points, referral codes, coordinated burst
+timing, syndicated agency language, the same incident, and the same travel group in
+one `independence_cluster_id`. A cluster counts at most once per polarity.
+
+Do not manufacture “platform diversity” with aliases. Normalize every platform
+into a source family. Multiple Xiaohongshu accounts remain one source family; an
+independent Reddit cluster and a Korean local-platform cluster are distinct
+families.
+
+Promotion risk is not positivity and suspected attack risk is not negativity.
+Preserve the post, but keep these risk dimensions separate so neither paid praise
+nor coordinated criticism controls the decision merely through volume.
+
+Read [reputation-and-bias.md](reputation-and-bias.md) whenever a candidate has
+commercial-promotion, scam, coordinated-attack, comment-corroboration, or
+nationality-discrimination risk.
+
+## 6. Candidate evidence gate
 
 Before final writing, produce a table with:
 
@@ -98,7 +130,7 @@ Before final writing, produce a table with:
 - negative-direct count;
 - current-official count;
 - operational-failure count;
-- platforms represented;
+- source families represented;
 - unresolved conflicts;
 - decision;
 - reason.
@@ -110,9 +142,11 @@ If an important candidate lacks negative evidence:
 3. if still absent, mark `UNCOVERED`;
 4. downgrade the recommendation or disclose the gap.
 
-Never convert absence of evidence into evidence of safety or value.
+Never convert absence of evidence into evidence of safety or value. A rejected
+candidate still needs a structured reason and direct evidence, unless the reason is
+explicitly a `USER_PREFERENCE:`.
 
-## 6. Conflict handling
+## 7. Conflict handling
 
 When sources conflict:
 
@@ -122,14 +156,17 @@ When sources conflict:
 - choose based on the user’s actual goals and constraints;
 - define an on-site decision gate instead of forcing certainty.
 
-## 7. Research stopping rule
+## 8. Research stopping rule
 
 Stop only when:
 
-- all critical candidates pass the declared gate;
-- major uncovered candidates are resolved, rejected, downgraded, or explicitly disclosed;
+- all critical and major candidates pass the declared final gate;
+- rejected candidates retain their evidence/reason and replacement when relevant;
 - each day has a complete route and fallback;
 - unstable hard facts have a current source;
 - additional posts no longer change decisions.
 
 Post count alone is never a stopping rule.
+Passing the evidence gate does not by itself make the PDF final; traceability,
+reputation, itinerary arithmetic, PDF validation, and page-by-page visual inspection
+must also pass.

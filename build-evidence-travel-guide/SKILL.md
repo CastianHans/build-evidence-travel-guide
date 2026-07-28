@@ -1,211 +1,215 @@
 ---
 name: build-evidence-travel-guide
-description: 面向中国用户构建、审计、修订并打包循证旅行计划和自包含 PDF 手册；综合官方来源、小红书正向种草与反向避雷、Reddit、目的地本地语言平台、博客、地图和评价网站。用户需要详细行程、家庭旅行、社交平台调研、逐景点避雷、路线可行性、交通卡与机场交通、支付宝/微信/银联等支付分析、境内外商品比价或精美旅行 PDF 时使用；缺少调研软件时也适用。
+description: 面向中国用户从零构建、审计、修订并打包循证旅行计划和自包含 PDF 手册；综合官方来源、小红书正向种草与反向避雷、Reddit、目的地本地语言平台、地图与攻略，评估商业推广/黑帖置信度、评论附和与疑似歧视信号。用户需要详细行程、家庭旅行、逐景点调研、路线可行性、交通卡与机场交通、支付宝/微信/银联等支付分析、境内外商品比价或精美旅行 PDF 时使用；缺少调研软件、需要审核旧计划或要求最终交付门禁时也适用。
 ---
 
 # 构建面向中国用户的循证旅行手册
 
-把交付物当作可直接照着执行的现场手册，而不是景点清单。
+把交付物当作第一次到访者可直接照着执行的现场手册，而不是景点清单。
 
 ## 中国市场默认设置
 
 - 除非用户另有要求，否则使用简体中文沟通和交付。
-- 把小红书作为中国游客体验的核心层，同时把官方、国外社区和目的地本地平台证据分层保留。
-- 涉及价格决策时，同时给出当地货币、带汇率时间戳的人民币估算和中国常见渠道对比价。
-- 按需要分别核验支付宝、微信支付、银联、Visa、Mastercard、境外交易费、动态货币转换、仅收现金例外和支付失败备选。
-- 涉及执行时，检查中国护照、从中国大陆出发、漫游/实体 SIM/eSIM、插头、退税、海关、保修、地区型号、App/语言和售后限制。
-- 国外平台名、官方产品名、车站名、型号和有用的当地语言检索词保持原文，避免因翻译损失操作精度。
+- 以小红书为中国游客体验核心层，同时保留官方、国外社区和目的地本地平台的独立证据层。
+- 涉及价格时给出当地货币、带汇率时间戳的人民币估算和中国常见渠道同规格对比价。
+- 分别核验支付宝、微信支付、银联、Visa、Mastercard、境外交易费、DCC、仅收现金例外和支付失败备选。
+- 检查中国护照/大陆出发、上网、插头、退税、海关、保修、地区型号、App/语言和售后限制。
+- 国外平台名、官方产品名、车站名、型号和当地语言检索词保持原文。
 
-## Non-negotiable rules
+## 不可妥协的规则
 
-1. Separate user facts, user preferences, model assumptions, official facts, and social experiences.
-2. Do not infer physical limitations from age or family role. Ask for or use stated mobility and heat tolerance.
-3. Verify every unstable hard fact close to delivery: weather, closures, hours, prices, ticket rules, transport coverage, payment methods, and entry requirements.
-4. Search both positive and negative experiences for every important candidate.
-5. A query containing “避雷” is not evidence. Open the result and confirm that it discusses the exact candidate.
-6. Do not count off-topic, copied, promotional, or title-only results as direct evidence.
-7. Do not claim complete negative validation while any important candidate remains uncovered.
-8. Keep social access read-only. Never auto-login, harvest cookies, post, comment, like, favorite, or bypass platform controls.
-9. Cite official sources for hard rules and social sources for lived experience. Do not substitute one for the other.
-10. Render and inspect the final PDF page by page before delivery.
+1. 分开记录用户事实、偏好、模型假设、官方事实和社会体验。
+2. 不根据年龄或家庭角色推断体力；使用用户明确的步行、地形和冷热耐受。
+3. 临近交付重新核验天气、关闭、时间、价格、票务、交通覆盖、支付和入境要求。
+4. 每个重要候选都分别做正向与反向检索；搜索词含“避雷”不算证据。
+5. 只有打开正文/完整索引文本且确认同一对象的记录才能计入直接证据。
+6. 按独立叙事簇计数，不按帖子、评论、点赞或平台搜索结果总量计数。
+7. 商业推广风险、协同攻击风险和内容正负面是三个独立维度。
+8. D0/D1 不得写成歧视；D2/D3 必须满足分级证据和替代解释检查。
+9. 社交访问只读；不自动登录、提取 Cookie、发帖、评论、点赞、收藏或绕过平台控制。
+10. 中间稿只能叫 `provisional`。只有全部门禁通过才能叫“最终版/完成/全部验证”。
+11. 最终 PDF 必须逐页渲染、逐页检查并留下检查人和时间。
 
-## Workflow
+## 工作流
 
-### 1. Ingest all supplied material
+### 1. 摄取材料并建立可追溯需求
 
-- Read [references/intake.md](references/intake.md), collect the minimum intake, and stop before broad research if any blocking field is unknown.
-- Read every supplied PDF, document, slide deck, image, booking, and prior conversation.
-- Extract facts into a requirements ledger before researching.
-- Mark each item as `USER_CONFIRMED`, `SOURCE_CONFIRMED`, `ASSUMPTION`, `UNKNOWN`, or `CONFLICT`.
-- Preserve exact flights, hotel address, dates, party size, payment limits, health constraints, desired places, optional plans, and prohibited actions.
-- Never silently carry an earlier assistant’s guess forward as a user fact.
+读取 [references/intake.md](references/intake.md)，再处理用户提供的全部 PDF、文档、幻灯片、图片、订单和历史对话。
 
-Use `scripts/init_project.py DESTINATION_DIR` to create reusable ledgers and folders.
+- 先提取需求，再开始广泛调研。
+- 标记 `USER_CONFIRMED`、`SOURCE_CONFIRMED`、`ASSUMPTION`、`UNKNOWN`、`CONFLICT`。
+- 保留航班、酒店完整地址、日期、人数、付款限制、实际体力、必去/可选/禁用项目和授权边界。
+- 旧助手结论不得自动升级为用户事实。
+- 把每项要求写入 `requirements/traceability.csv`，映射候选对象和 PDF 章节。
 
-### 2. Bootstrap and diagnose research tools
+初始化或安全升级项目台账：
 
-Read [references/bootstrap.md](references/bootstrap.md) when Agent-Reach, OpenCLI, browser bridging, or social-platform access is missing or unhealthy.
+```text
+python scripts/init_project.py PROJECT_DIR
+```
 
-- Prefer Agent-Reach as the capability router and health checker.
-- Run `python scripts/doctor.py` to identify missing local dependencies without changing the system.
-- Run `agent-reach doctor --json` before platform work.
-- Use the backend reported as usable; do not infer access from installation alone.
-- For Chromium browsers, including Edge, use the user-controlled OpenCLI Browser Bridge session.
-- If a logged-in session is unavailable, continue with official pages, public web indexes, and accessible platforms while labeling the gap.
-- Do not block independent official verification merely because a social backend is unavailable.
+### 2. 体检调研工具
 
-### 3. Build the candidate inventory before collecting posts
+当 Agent-Reach、OpenCLI、浏览器桥或社交访问缺失/异常时，读取
+[references/bootstrap.md](references/bootstrap.md)。
 
-List every decision-relevant object:
+- 先运行 `python scripts/doctor.py`、`agent-reach doctor --json` 和活动后端的帮助/列表命令。
+- Agent-Reach 是能力路由和健康层；不要杜撰 `agent-reach search ...`。
+- Edge 等 Chromium 浏览器可使用用户控制的 OpenCLI Browser Bridge。
+- 安装成功不等于可读；每个平台分别做一次真实搜索和一次正文打开验证。
+- 平台不可访问时保留访问缺口，继续独立官方核验，不假装等价替代。
 
-- attraction, neighborhood, mall, museum, restaurant or food strategy;
-- airport transfer, transit pass, rail trip, taxi plan, station transfer;
-- hotel operation, luggage step, payment method, SIM/eSIM;
-- product, store, tax-refund path, warranty or customs issue;
-- weather-dependent branch and complete fallback day.
+### 3. 先建候选清单，再收集帖子
 
-Assign each candidate:
+列出所有影响决策的对象：
 
-- stable `candidate_id`;
-- category and exact canonical name;
-- proposed date and route role;
-- importance: `critical`, `major`, or `minor`;
-- evidence target;
-- inclusion status: `candidate`, `included`, `optional`, or `rejected`.
+- 景点、街区、商场、博物馆、餐厅或就餐策略；
+- 机场交通、交通卡、铁路/一日游、出租车、站内换乘；
+- 酒店操作、行李、支付、SIM/eSIM；
+- 商品、商店、退税、保修、海关问题；
+- 依赖天气/能见度/票务的分支和完整替代日。
 
-Do not research only the initial itinerary. Include plausible replacements so negative evidence can change the plan.
+为每项分配稳定 `candidate_id`、精确名称/分店/型号、路线角色、日期、
+`critical|major|minor`、证据目标、`candidate|included|optional|rejected` 和
+是否 `reputation_required`。用户明确提及的江陵、交通卡、商店或备选不得
+因未进入主线而从清单消失。
 
-### 4. Collect evidence in two passes
+### 4. 先广搜路线，再逐对象深搜
 
-Read [references/research-protocol.md](references/research-protocol.md) before starting a substantial collection.
+开始大量收集前读取
+[references/research-protocol.md](references/research-protocol.md)。
 
-**Pass A - broad route construction**
+**A：正向广搜与路线骨架**
 
-- Search complete itineraries, neighborhood combinations, seasonal constraints, and traveler archetypes.
-- Draft geographically coherent day clusters.
-- Use this pass to discover candidates, not to finalize them.
+- 搜完整行程、区域组合、季节限制、真实游览时长和旅行者类型。
+- 从酒店地址形成地理连贯的日簇，同时发现替代候选。
+- 这一步只形成可执行骨架，不直接定稿。
 
-**Pass B - candidate-level validation**
+**B：逐候选正反向核验**
 
-For each critical or major candidate, search separately:
+对每个 critical/major 候选单独搜：
 
-- positive experience and realistic duration;
-- direct negative experience, disappointment, queue, heat, accessibility, payment, price, hygiene, closure, or logistics failure;
-- current official rules;
-- local-language name and local-platform discussion;
-- exact connection to the next stop.
+- 正向体验、真实停留时长、适用场景；
+- 直接负面、排队、炎热、人流、价格、卫生、支付、关闭和操作失败；
+- 当前官方规则；
+- 当地语言名称和当地平台讨论；
+- 到下一站的精确连接；
+- 高影响争议帖的评论、反驳、修正与商家回复。
 
-Open full posts and relevant comments. Record URLs, dates, platform, author where available, polarity, relevance, and the claim supported.
-For every direct social record, also save an excerpt, reviewer, and explicit candidate-identity check.
+记录全文访问级别、正文摘录、对象身份、分店/型号、日期、作者（可见时）、
+独立簇、来源家族、具体事件、实物/票据支持和决策影响。搜索摘要、标题、
+错配、部分相关和推广记录只能发现线索，不能满足直接证据门槛。
 
-### 5. Enforce evidence coverage
+### 5. 审计信誉、评论、黑帖与歧视信号
 
-Use these default targets unless the user specifies stricter thresholds:
+对命名餐厅/店铺、有大量营销或黑帖风险的对象，以及出现诈骗/歧视争议的
+对象，读取 [references/reputation-and-bias.md](references/reputation-and-bias.md)。
 
-| Candidate | Positive | Direct negative | Official/current | Operational failure |
-|---|---:|---:|---:|---:|
-| Critical attraction/route | 2 | 2 | 1 | when applicable |
-| Major attraction/mall | 2 | 2 | 1 if rules/prices exist | when applicable |
-| Named restaurant/store | 2 | 2 | menu/price when available | 1 |
-| Transit pass/airport transfer | 1 | 2 | 2 primary checks | 2 |
-| Product recommendation | 2 | 2 adverse/limitation | current price | warranty/compatibility as applicable |
-| Minor connector | 1 | 1 or explicit `NOT_APPLICABLE` | map/current rule | optional |
+- 近似文案、图片、话术、邀请码、爆发时间、同一事件/旅行团合并为一簇。
+- 正向记录商业风险，负向记录攻击风险；不靠原始数量“投票”。
+- 评论写入 `research/comments.csv`：独立一手补充可低权重计入；具体附和更低；
+  纯同意/表情只算弱情绪并封顶；反驳、修正和商家回复必须保留。
+- 同一事件评论不独立；披露排序、展开范围、删除/审核、登录和限流影响。
+- “骗局/scam”只有具体收费或履约模式才影响避雷门禁。
+- 只有当前 D3 原始证据，或跨来源/时间窗的多个独立 D2 簇收敛，才触发
+  保守避开复核；结论限定分店和时间，不作法律认定。
 
-`NOT_APPLICABLE` is allowed only with a written reason. “No negative post found” is `UNCOVERED`, not `NOT_APPLICABLE`.
+运行：
 
-Counts use unique canonical URLs only. A duplicated post, duplicated evidence ID, orphan evidence row, invalid enum, missing excerpt, or unchecked candidate identity is a validation error, not a warning.
+```text
+python scripts/audit_reputation.py PROJECT_DIR
+```
 
-Run:
+### 6. 执行证据覆盖门禁
+
+默认目标按独立簇计算：
+
+| 候选 | 正向 | 直接负向 | 官方/当前 | 操作失败 | 体验来源家族 |
+|---|---:|---:|---:|---:|---:|
+| Critical | 2 | 2 | 1 | 1 | 2 |
+| Major | 2 | 2 | 1 | 按需 | 2 |
+| Minor | 1 | 1 或有理由的 N/A | 按需 | 按需 | 1 |
+
+交通卡/机场交通应额外保留两个独立官方核验和两个操作失败簇；产品应覆盖
+副作用/限制、当前同规格价格和保修/兼容性。
 
 ```text
 python scripts/audit_evidence.py PROJECT_DIR
 ```
 
-Do not move to final writing while critical candidates fail the gate. If a platform is inaccessible, disclose the shortfall and use the best available alternative without pretending equivalence.
+降低目标必须写 `TARGET_OVERRIDE:` 或 `NOT_APPLICABLE:`。未找到负面是
+`UNCOVERED`。被拒绝候选仍需直接证据和理由，除非理由明确为
+`USER_PREFERENCE:`。最终模式下 critical 和 major 任一未覆盖都不能定稿。
 
-### 6. Construct each day from the hotel
+### 7. 从酒店构造每一天并核算
 
-For every day:
+每一天：
 
-1. Start at the exact hotel address.
-2. Group stops by geography and opening-day compatibility.
-3. State each walk, station entrance/exit, train/bus direction, transfers, taxi leg, expected wait, and navigation buffer.
-4. Add realistic stop duration from official information and social reports.
-5. Add meals, toilets, seating, luggage, shopping, and weather recovery.
-6. Calculate net attraction time, transit/search time, meal time, buffer, total elapsed time, walking range, cost range, and latest exit.
-7. Define weather/visibility/ticket gates and a complete fallback route.
-8. Remove or demote candidates whose negative evidence outweighs their route value.
+1. 从确切酒店地址出发并回到酒店。
+2. 按地理和开放日组合多个合理停靠。
+3. 写明步行、入口/出口、方向、换乘、出租车、候车和找路缓冲。
+4. 用官方与多个真实体验确定净停留时间。
+5. 加入吃饭、厕所、座位、行李、购物、休息和天气恢复。
+6. 合计活动、交通/找路、餐休、缓冲、步行/户外暴露、费用和最晚退出。
+7. 为天气、能见度、票务和关闭设置触发条件与完整替代日。
 
-Do not turn a complete day into a single attraction merely because travelers are older. Use actual mobility, terrain, temperature, humidity, shade, and stated preferences.
+把算术块填入 `work/itinerary.csv` 并运行：
 
-### 7. Audit transport passes and payments separately
+```text
+python scripts/audit_itinerary.py PROJECT_DIR
+```
 
-For every pass or payment recommendation:
+不要因父母同行就自动降成老弱行程；只按实际体力、温湿度、遮阴和用户偏好。
 
-- calculate break-even against the actual itinerary;
-- distinguish card price, pass price, deposit, reload method, activation rule, validity, refunds, and service fees;
-- list included and excluded modes and geographic boundaries;
-- verify whether each traveler needs a separate card;
-- separate airport purchase, city purchase, and return-to-airport procedures;
-- research failure cases: foreign-card rejection, cash-only machines, wrong product, missed tap, late activation, unavailable stock, incompatible route, and refund difficulty;
-- distinguish Alipay/WeChat acceptance from merchant-presented QR compatibility, and UnionPay acceptance from generic “card accepted” claims;
-- warn against dynamic currency conversion and state whether local-currency settlement is normally preferable;
-- give an exact fallback and state the cash impact.
+### 8. 单独核算交通、支付、餐饮和购物
 
-Never recommend a pass merely because its validity length matches the trip length.
+- 交通卡按真实逐段行程算盈亏，不因天数刚好覆盖就推荐。
+- 分开说明卡价/押金/充值、购买点、支付方式、激活、有效期、覆盖、漏刷、
+  退卡和机场/市区差异。
+- 机场交通写清班次/产品、票种、柜台/机器、购买步骤、行李和完整备选。
+- 分别核验支付宝、微信、银联和国际卡；提示 DCC 与失败时现金影响。
+- 餐厅优先给同区域决策规则、排队上限、透明价格和替代项。
+- 商品用同型号/容量/SKU的当日净价与带日期国内价比较；写明副作用、保修、
+  地区型号、语言、电压、海关和行李限制。
 
-### 8. Audit restaurants, shopping, and products
+### 9. 编写并设计现场手册
 
-- Prefer a decision rule over a fragile “must visit” named venue.
-- Set queue limits, price transparency rules, ordering checks, and alternatives in the same area.
-- For products, compare exact model/size and same-day net price, not list price.
-- Compare the destination net price with a dated mainland China reference price and show both in CNY when practical.
-- Include adverse reactions, unsuitable users, regional model differences, warranty, voltage/frequency, language, customs, and luggage constraints.
-- Treat promotions as expiring observations, never guaranteed prices.
+写作前读取 [references/planning-and-pdf.md](references/planning-and-pdf.md)，
+可复用 [assets/guide-outline.md](assets/guide-outline.md)。
 
-### 9. Write the field manual
+PDF 前三页先给：
 
-Read [references/planning-and-pdf.md](references/planning-and-pdf.md) before authoring.
+1. 旅行期间天气与核验时间；超出可靠预报窗写“远期趋势，非逐日预报”；
+2. 出发前准备。
 
-The PDF must begin with:
+随后包含硬边界、交通/支付、总日历、逐日完整路线、逐站执行卡、完整备选、
+餐饮/商品/应急/语言卡、信誉与歧视信号、证据覆盖和可读来源。
 
-1. trip-period weather and update time;
-2. pre-departure preparation.
+只使用对识路、识别地标或关键决策有帮助的图片。优先官方/自制示意图并注明
+来源；不要把社交截图当成不会变化的导航标志。
 
-Then include:
+### 10. 只能通过最终门禁交付
 
-- bookings and hard boundaries;
-- transport card and airport-transfer operations;
-- overview calendar;
-- one complete section per day;
-- one execution card per stop;
-- complete alternatives;
-- food, shopping, products, emergency handling, local-language cards;
-- evidence coverage and human-readable sources.
+交付前读取 [references/release-gates.md](references/release-gates.md)。
 
-Use images only when they materially help recognition, navigation, or a non-obvious decision. Do not use social screenshots as fixed navigation when live signs or map instructions are more reliable.
+1. 重新核验不稳定官方事实。
+2. 运行需求、证据、信誉和行程审计。
+3. 在 PDF 中写入当前候选对象和证据台账行数。
+4. 运行 `validate_pdf.py`，拦截缺页、旧版本文案、过期天气和元数据不一致。
+5. 用 `render_pdf.py` 渲染全页；逐页检查并把视觉清单逐项标为 `pass`。
+6. 运行 `finalize_run.py`。
 
-### 10. Validate and deliver
+只有命令输出 `FINAL: every required completion gate passed.` 且清单中的
+`final_allowed=true` 时，才可交付为最终版。否则修复，或明确交付带缺口的
+`provisional`，不得停在一个看似完成的中间稿上。
 
-- Recheck unstable official facts.
-- Run the evidence audit and resolve all critical failures.
-- Generate the PDF.
-- Run `scripts/validate_pdf.py FILE.pdf --require "term" ...`.
-- Run `scripts/render_pdf.py FILE.pdf RENDER_DIR`.
-- Inspect the contact sheet and representative pages at full resolution.
-- Fix clipping, overflow, sparse accidental pages, unreadable URLs, missing glyphs, broken images, and ambiguous cross-page cards.
-- Record page count, file size, SHA-256, research counts, uncovered candidates, and verification timestamp.
-- Deliver the PDF and, when requested, the source/evidence package.
+## 证据语言
 
-## Evidence language
+- `DIRECT`：打开的来源讨论精确对象和问题。
+- `PARTIAL`：同区域/类别但非精确对象或场景。
+- `MISMATCH`：另一个对象，排除计数。
+- `PROMOTIONAL`：存在激励或明显推广，只作发现。
+- `OFFICIAL`：权威硬信息，不是体验证明。
+- `UNCOVERED`：所需证据没有找到。
 
-Use precise claims:
-
-- `DIRECT`: the opened source discusses the exact candidate and issue.
-- `PARTIAL`: same area/category, but not the exact candidate or scenario.
-- `MISMATCH`: search result is about another object; exclude it from counts.
-- `PROMOTIONAL`: creator incentive or obvious promotion; keep only as discovery.
-- `OFFICIAL`: authoritative hard information, not proof of traveler experience.
-- `UNCOVERED`: required evidence not found.
-
-Never write “all items were verified by negative posts” unless the evidence audit passes at the declared threshold.
+除非最终化清单通过，不得写“所有项目均已避雷验证”。

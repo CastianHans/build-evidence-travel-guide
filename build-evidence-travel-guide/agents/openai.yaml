@@ -1,4 +1,4 @@
 interface:
   display_name: "循证旅行计划与PDF"
-  short_description: "为中国用户制作可执行、可追溯的出境旅行PDF"
-  default_prompt: "使用 $build-evidence-travel-guide 从零调研我的旅行，默认用简体中文，综合小红书正反向体验、国外与当地平台和官方信息，制作可直接执行且来源可追溯的旅行计划 PDF。"
+  short_description: "为中国用户制作含社交置信度审计的可执行旅行PDF手册"
+  default_prompt: "使用 $build-evidence-travel-guide 从零调研我的旅行，核验小红书等平台的正反向内容、推广与黑帖风险、评论附和和疑似歧视信号，制作通过最终门禁的简体中文旅行计划 PDF。"

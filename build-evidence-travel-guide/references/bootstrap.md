@@ -16,9 +16,12 @@
 3. If absent, prefer the official Agent-Reach installer.
 4. Install only the channels needed for the requested platforms.
 5. For Xiaohongshu, Reddit, Instagram, Facebook, or X, verify a browser-backed backend and user-controlled login state.
-6. Test one read-only search and one full-post read before starting a large batch.
+6. Inspect the installed router/skill and active backend help before constructing commands.
+7. Test one supported read-only search and one supported full-post read before starting a large batch.
 
 Installation is not evidence of access.
+Agent-Reach is a capability/router and health layer; `agent-reach search ...` is not
+a portable platform-read command. Never invent that command.
 
 ## 2. Install Agent-Reach
 
@@ -85,6 +88,10 @@ opencli list
 ```
 
 When several browser profiles are connected, explicitly choose one. Never guess which profile contains the user’s travel-platform login.
+After `opencli list`, inspect the advertised application/action help and use only
+commands actually exposed by the installed version. Platform actions drift between
+versions, so this skill deliberately does not hard-code a universal Xiaohongshu
+search command.
 
 ## 4. Browser and authentication boundary
 
@@ -103,6 +110,7 @@ Run:
 agent-reach doctor --json
 opencli doctor
 opencli profile list
+opencli list
 ```
 
 For each requested platform record:
@@ -114,6 +122,10 @@ For each requested platform record:
 - limitation or fallback.
 
 Do not label a `warn` channel usable until an actual search succeeds.
+Do not label a search backend usable for evidence until a result can also be opened
+as `full_post_opened` or `full_indexed_text`. Record the exact supported command or
+tool call used in the run notes; never substitute a command remembered from another
+version.
 
 ## 6. Failure recovery
 
